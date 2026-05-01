@@ -125,6 +125,12 @@ async function bootstrap() {
     // Warm up Redis
     getRedis();
 
+    // Keep HF Spaces RAG service awake — ping every 4 minutes
+    setInterval(async () => {
+      const ok = await checkRagHealth();
+      if (!ok) console.warn('⚠️  RAG keep-alive ping failed — HF Space may be sleeping');
+    }, 4 * 60 * 1000);
+
     app.listen(PORT, () => {
       console.log(`\n🚀 Career Path Backend running at http://localhost:${PORT}`);
       console.log(`   Environment: ${process.env.NODE_ENV ?? 'development'}`);
