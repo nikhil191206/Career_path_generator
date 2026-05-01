@@ -21,9 +21,23 @@ const PORT = parseInt(process.env.PORT ?? '4000', 10);
 // ─── Security & Parsing ───────────────────────────────────────────────────────
 app.use(helmet());
 app.use(compression());
+const allowedOrigins = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  process.env.FRONTEND_URL,
+].filter(Boolean) as string[];
+
 app.use(
   cors({
-    origin: process.env.FRONTEND_URL ?? 'http://localhost:3000',
+    origin: (origin, callback) => {
+      // Allow requests with no origin (Postman, curl, server-to-server)
+      if (!origin) return callback(null, true);
+      // Allow any vercel.app subdomain + explicit allowed list
+      if (origin.endsWith('.vercel.app') || allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    },
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
