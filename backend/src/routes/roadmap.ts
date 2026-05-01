@@ -4,7 +4,7 @@ import { prisma } from '../lib/prisma';
 import { requireAuth } from '../middleware/auth';
 import { RoadmapRequestSchema } from '../schemas';
 import { cacheGet, cacheSet, profileCacheKey } from '../lib/redis';
-import { callRagGenerate, AuditScore } from '../lib/ragClient';
+import { callRagGenerate, prismaToRagProfile, AuditScore } from '../lib/ragClient';
 
 const router = Router();
 router.use(requireAuth);
@@ -40,7 +40,7 @@ router.post('/generate', async (req: Request, res: Response) => {
   // ── Call RAG microservice ────────────────────────────────────────────────────
   let ragResponse;
   try {
-    ragResponse = await callRagGenerate(profile);
+    ragResponse = await callRagGenerate(prismaToRagProfile(profile));
   } catch (error) {
     const msg = error instanceof Error ? error.message : 'Unknown error';
     console.error(`❌ RAG service error: ${msg}`);
